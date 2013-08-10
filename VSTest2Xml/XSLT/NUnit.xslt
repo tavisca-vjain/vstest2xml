@@ -8,12 +8,12 @@
 
     <!-- <test-results -->
     <xsl:element name="test-results">
-      
+
       <!-- name -->
       <xsl:attribute name="name">
         <xsl:value-of select="t:TestRun/@name"/>
       </xsl:attribute>
-      
+
       <!-- time -->
       <xsl:attribute name="time">
         <xsl:value-of select="substring-before(substring-after(t:TestRun/t:Times/@start,'T'),'.')"/>
@@ -63,7 +63,7 @@
       <xsl:attribute name="total">
         <xsl:value-of select="t:TestRun/t:ResultSummary/t:Counters/@total"/>
       </xsl:attribute>
-      
+
       <xsl:text>&#10;&#x9;</xsl:text>
 
       <!-- <environment> -->
@@ -89,7 +89,12 @@
 
         <!-- name="" -->
         <xsl:attribute name="name">
-          <xsl:value-of select="t:TestRun/t:TestDefinitions/t:UnitTest/@storage"/>
+          <!--<xsl:value-of select="t:TestRun/t:TestDefinitions/t:UnitTest/@storage"/>-->
+          <!--<xsl:value-of select="tokenize('t:TestRun/t:TestDefinitions/t:UnitTest/@storage','\')[last()]"/>-->
+          <xsl:call-template name="SplitText">
+            <xsl:with-param name="inputString" select="t:TestRun/t:TestDefinitions/t:UnitTest/@storage"/>
+            <xsl:with-param name="delimiter">\</xsl:with-param>
+          </xsl:call-template>
         </xsl:attribute>
 
         <!-- success="" -->
@@ -156,7 +161,9 @@
                               (substring(/t:TestRun/t:Results/t:UnitTestResult[@testId=$id]/@duration, 1, 2) * 60 * 60) + 
                               (substring(/t:TestRun/t:Results/t:UnitTestResult[@testId=$id]/@duration, 4, 2) * 60) + 
                               (substring(/t:TestRun/t:Results/t:UnitTestResult[@testId=$id]/@duration, 7, 2)) 
-                              "/><xsl:value-of select="((substring(/t:TestRun/t:Results/t:UnitTestResult[@testId=$id]/@duration, 9, 4)))"/> <xsl:value-of select="@duration"></xsl:value-of>
+                              "/>
+                <xsl:value-of select="((substring(/t:TestRun/t:Results/t:UnitTestResult[@testId=$id]/@duration, 9, 4)))"/>
+                <xsl:value-of select="@duration"></xsl:value-of>
               </xsl:attribute>
 
               <!-- asserts="" -->
@@ -205,5 +212,32 @@
     </xsl:element>
     <!-- </test-results -->
 
+  </xsl:template>
+  
+  <!-- Utility Functions-->
+  <xsl:template name="SplitText">
+    <xsl:param name="inputString"/>
+    <xsl:param name="delimiter"/>
+    <xsl:choose>
+      <xsl:when test="contains($inputString, $delimiter)">
+        <!--<xsl:value-of select="substring-before($inputString,$delimiter)"/>
+        <xsl:text disable-output-escaping = "no"> </xsl:text>-->
+        <xsl:call-template name="SplitText">
+          <xsl:with-param name="inputString" select="substring-after($inputString,$delimiter)"/>
+          <xsl:with-param name="delimiter" select="$delimiter"/>
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:choose>
+          <xsl:when test="$inputString = ''">
+            <xsl:text></xsl:text>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:value-of select="$inputString"/>
+            <xsl:text></xsl:text>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 </xsl:stylesheet>
